@@ -1,0 +1,17 @@
+{
+    "version": "2.0",
+  "logging": {
+    //"logLevel": {
+    //  "default": "Warning",
+    //  "Host.Results": "Error",
+    //  "Function": "Warning",
+    //  "Host.Aggregator": "Error"
+    //},
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      }
+    }
+  }
+}

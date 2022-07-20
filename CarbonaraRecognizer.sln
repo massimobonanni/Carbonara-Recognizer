@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32616.157
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarbonaraRecognizer.FuncApp", "CarbonaraRecognizer.FuncApp\CarbonaraRecognizer.FuncApp.csproj", "{DF7B3382-5D15-47D4-95BD-A3BB2102EE62}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarbonaraRecognizer.Core", "CarbonaraRecognizer.Core\CarbonaraRecognizer.Core.csproj", "{05E0185B-CDCB-4CC7-B452-9D9EE1D2C157}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarbonaraRecognizer.CustomVision", "CarbonaraRecognizer.CustomVision\CarbonaraRecognizer.CustomVision.csproj", "{910619E5-2608-453A-B3BF-EF1B14CFEC68}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DF7B3382-5D15-47D4-95BD-A3BB2102EE62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF7B3382-5D15-47D4-95BD-A3BB2102EE62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF7B3382-5D15-47D4-95BD-A3BB2102EE62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF7B3382-5D15-47D4-95BD-A3BB2102EE62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05E0185B-CDCB-4CC7-B452-9D9EE1D2C157}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05E0185B-CDCB-4CC7-B452-9D9EE1D2C157}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05E0185B-CDCB-4CC7-B452-9D9EE1D2C157}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05E0185B-CDCB-4CC7-B452-9D9EE1D2C157}.Release|Any CPU.Build.0 = Release|Any CPU
+		{910619E5-2608-453A-B3BF-EF1B14CFEC68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{910619E5-2608-453A-B3BF-EF1B14CFEC68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{910619E5-2608-453A-B3BF-EF1B14CFEC68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{910619E5-2608-453A-B3BF-EF1B14CFEC68}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CEFDDC16-3DCD-408C-9D8D-05397AF037FE}
+	EndGlobalSection
+EndGlobal
