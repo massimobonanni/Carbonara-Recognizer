@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarbonaraRecognizer.Core", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CarbonaraRecognizer.CustomVision", "CarbonaraRecognizer.CustomVision\CarbonaraRecognizer.CustomVision.csproj", "{910619E5-2608-453A-B3BF-EF1B14CFEC68}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{4F0809A3-6799-43AF-948F-9773491040ED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CarbonaraRecognizer.Core.Test", "Test\CarbonaraRecognizer.Core.Test\CarbonaraRecognizer.Core.Test.csproj", "{CFA11FFA-B3BF-4E1C-B570-8E0CE1086066}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,9 +31,16 @@ Global
 		{910619E5-2608-453A-B3BF-EF1B14CFEC68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{910619E5-2608-453A-B3BF-EF1B14CFEC68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{910619E5-2608-453A-B3BF-EF1B14CFEC68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFA11FFA-B3BF-4E1C-B570-8E0CE1086066}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFA11FFA-B3BF-4E1C-B570-8E0CE1086066}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFA11FFA-B3BF-4E1C-B570-8E0CE1086066}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFA11FFA-B3BF-4E1C-B570-8E0CE1086066}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CFA11FFA-B3BF-4E1C-B570-8E0CE1086066} = {4F0809A3-6799-43AF-948F-9773491040ED}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CEFDDC16-3DCD-408C-9D8D-05397AF037FE}

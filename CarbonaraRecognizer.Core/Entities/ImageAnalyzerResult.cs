@@ -13,8 +13,9 @@
                 return false;
 
             var query = this.Labels
-                .Where(l => string.Compare(l.Label, label, ignoreCase) == 0)
-                .Take(rank);
+                .OrderByDescending(l=>l.Confidence)
+                .Take(rank)
+                .Where(l => string.Compare(l.Label, label, ignoreCase) == 0);
 
             return query.Any();
         }
