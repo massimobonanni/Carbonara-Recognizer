@@ -1,33 +1,24 @@
 ﻿using CarbonaraRecognizer.Core.Entities;
-using CarbonaraRecognizer.Core.Interfaces;
-using CarbonaraRecognizer.FuncApp.DurableFunctions.Dtos;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarbonaraRecognizer.FuncApp.DurableFunctions
 {
     public class CheckImageActivity
     {
         private readonly IConfiguration configuration;
-
-        public CheckImageActivity(IConfiguration configuration)
+        private readonly ILogger<CheckImageActivity> logger;
+            
+        public CheckImageActivity(IConfiguration configuration, ILogger<CheckImageActivity> logger)
         {
             this.configuration = configuration;
+            this.logger = logger;
         }
 
-        [FunctionName(nameof(CheckImageActivity))]
+        [Function(nameof(CheckImageActivity))]
         public bool Run(
-            [ActivityTrigger] ImageAnalyzerResult imageAnalyzerResult,
-            ILogger log)
+            [ActivityTrigger] ImageAnalyzerResult imageAnalyzerResult)
         {
             var retVal = false;
             if (imageAnalyzerResult != null)

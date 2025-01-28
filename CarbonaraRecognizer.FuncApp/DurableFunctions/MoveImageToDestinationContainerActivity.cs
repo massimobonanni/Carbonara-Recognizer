@@ -1,45 +1,45 @@
-﻿using CarbonaraRecognizer.Core.Entities;
-using CarbonaraRecognizer.Core.Interfaces;
+﻿using Azure.Storage.Blobs;
 using CarbonaraRecognizer.FuncApp.DurableFunctions.Dtos;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarbonaraRecognizer.FuncApp.DurableFunctions
 {
     public class MoveImageToDestinationContainerActivity
     {
         private readonly IConfiguration configuration;
+        private readonly BlobServiceClient sourceStorageServiceClient;
+        private readonly BlobServiceClient destionationStorageServiceClient;
+        private readonly ILogger<MoveImageToDestinationContainerActivity> logger;
 
-        public MoveImageToDestinationContainerActivity(IConfiguration configuration)
+        public MoveImageToDestinationContainerActivity(IConfiguration configuration,
+            IAzureClientFactory<BlobServiceClient> blobClientFactory,
+            ILogger<MoveImageToDestinationContainerActivity> logger)
         {
             this.configuration = configuration;
+            this.sourceStorageServiceClient = blobClientFactory.CreateClient(Constants.SourceBlobClientName);
+            this.destionationStorageServiceClient = blobClientFactory.CreateClient(Constants.DestinationBlobClientName);
+            this.logger = logger;
         }
 
-        [FunctionName(nameof(MoveImageToDestinationContainerActivity))]
+        [Function(nameof(MoveImageToDestinationContainerActivity))]
         public  async Task Run(
-            [ActivityTrigger] ImageAnalyzerOrchestratorDto orchestratorDto,
-            [Blob("%SourceContainer%", FileAccess.ReadWrite, Connection = "SourceStorageConnectionString")] CloudBlobContainer sourceContainerClient,
-            [Blob("%DestinationContainer%", FileAccess.ReadWrite, Connection = "DestinationStorageConnectionString")] CloudBlobContainer destinationContainerClient, 
-            ILogger log)
+            [ActivityTrigger] ImageAnalyzerOrchestratorDto orchestratorDto)
         {
-            var blobSourceReference = sourceContainerClient.GetBlockBlobReference(orchestratorDto.BlobName);
-            var blobDestinationReference = destinationContainerClient.GetBlockBlobReference(orchestratorDto.BlobName);
+            var sourceContainerClient = sourceStorageServiceClient.GetBlobContainerClient(configuration.GetValue<string>("SourceContainer"));
+            var sourceBlobClient  = sourceContainerClient.GetBlobClient(orchestratorDto.BlobName);
 
-            using (var stream = await blobSourceReference.OpenReadAsync())
+            var destinationContainerClient = destionationStorageServiceClient.GetBlobContainerClient(configuration.GetValue<string>("DestinationContainer"));
+            var destinationBlobClient = destinationContainerClient.GetBlobClient(orchestratorDto.BlobName);
+
+            using (var stream = await sourceBlobClient.OpenReadAsync())
             {
-                await blobDestinationReference.UploadFromStreamAsync(stream);
+                await destinationBlobClient.UploadAsync(stream);
             }
 
-            await blobSourceReference.DeleteAsync();
+            await sourceBlobClient.DeleteAsync();
         }
     }
    

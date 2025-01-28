@@ -1,12 +1,7 @@
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
 using CarbonaraRecognizer.Core.Entities;
 using CarbonaraRecognizer.FuncApp.DurableFunctions.Dtos;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.DurableTask;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -15,15 +10,17 @@ namespace CarbonaraRecognizer.FuncApp.DurableFunctions
     public class ImageAnalyzerOrchestrator
     {
         private readonly IConfiguration configuration;
+        private readonly ILogger<ImageAnalyzerOrchestrator> logger;
 
-        public ImageAnalyzerOrchestrator(IConfiguration configuration)
+        public ImageAnalyzerOrchestrator(IConfiguration configuration, ILogger<ImageAnalyzerOrchestrator> logger)
         {
             this.configuration = configuration;
+            this.logger = logger;
         }
 
-        [FunctionName(nameof(ImageAnalyzerOrchestrator))]
+        [Function(nameof(ImageAnalyzerOrchestrator))]
         public async Task RunOrchestrator(
-            [OrchestrationTrigger] IDurableOrchestrationContext context)
+            [OrchestrationTrigger] TaskOrchestrationContext context)
         {
             var orchestratorDto = context.GetInput<ImageAnalyzerOrchestratorDto>();
 

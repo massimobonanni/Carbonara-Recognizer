@@ -1,15 +1,11 @@
 #define FUNCTIONSTANDARD
 
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Azure.Messaging.EventGrid;
+using Azure.Storage.Blobs;
 using CarbonaraRecognizer.Core.Entities;
 using CarbonaraRecognizer.Core.Interfaces;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.EventGrid;
-using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -19,72 +15,77 @@ namespace CarbonaraRecognizer.FuncApp.Functions
     {
         private readonly IImageAnalyzer imageAnalyzer;
         private readonly IConfiguration configuration;
+        private readonly BlobServiceClient destionationStorageServiceClient;
+        private readonly EventGridPublisherClient eventClient;
+        private readonly ILogger<ImageFunctions> logger;
 
-        public ImageFunctions(IImageAnalyzer imageAnalyzer, IConfiguration configuration)
+        public ImageFunctions(IImageAnalyzer imageAnalyzer, IConfiguration configuration,
+            IAzureClientFactory<BlobServiceClient> blobClientFactory, IAzureClientFactory<EventGridPublisherClient> eventClientFactory,
+            ILogger<ImageFunctions> logger)
         {
             this.imageAnalyzer = imageAnalyzer;
             this.configuration = configuration;
+            this.destionationStorageServiceClient = blobClientFactory.CreateClient(Constants.DestinationBlobClientName);
+            this.eventClient = eventClientFactory.CreateClient(Constants.EventGridClientName);
+            this.logger = logger;
         }
 
 #if FUNCTIONSTANDARD
-        [FunctionName("ImageUploaded")]
+        [Function("ImageUploaded")]
         public async Task Run(
-            [BlobTrigger("%SourceContainer%/{name}", Connection = "SourceStorageConnectionString")] ICloudBlob inputImageClient,
-            string name,
-            [Blob("%DestinationContainer%/{name}", FileAccess.ReadWrite, Connection = "DestinationStorageConnectionString")] ICloudBlob validImageClient,
-            [Blob("%TrashbinContainer%/{name}", FileAccess.ReadWrite, Connection = "DestinationStorageConnectionString")] ICloudBlob trashImageClient,
-            [EventGrid(TopicEndpointUri = "TopicEndpoint", TopicKeySetting = "TopicKey")] IAsyncCollector<EventGridEvent> eventCollector,
-            ILogger log)
+            [BlobTrigger("%SourceContainer%/{name}", Connection = "SourceStorageConnectionString")] BlobClient sourceImage,
+            string name)
         {
-            log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name}");
+            logger.LogInformation($"C# Blob trigger function Processed blob\n Name:{name}");
 
             ImageAnalyzerResult result;
 
-            using (var stream = await inputImageClient.OpenReadAsync())
+
+            using (var imageStream = await sourceImage.OpenReadAsync())
             {
-                result = await imageAnalyzer.AnalyzeImageAsync(stream);
+                result = await imageAnalyzer.AnalyzeImageAsync(imageStream);
             }
 
-            log.LogTrace($"Image Analyzed: result={result?.IsRecognized}");
+            logger.LogTrace($"Image Analyzed: result={result?.IsRecognized}");
 
             if (result != null)
             {
-                ICloudBlob clientToUse;
+                string containerNameToUse = configuration.GetValue<string>("TrashbinContainer");
+;
                 if (result.IsRecognized)
                 {
                     var acceptedLabel = configuration.GetValue<string>("AcceptedLabel");
 
                     if (result.HasLabel(acceptedLabel))
                     {
-                        clientToUse = validImageClient;
+                        containerNameToUse = configuration.GetValue<string>("DestinationContainer");
                     }
                     else
                     {
-                        clientToUse = trashImageClient;
+                        containerNameToUse = configuration.GetValue<string>("TrashbinContainer");
                     }
                 }
-                else
-                {
-                    clientToUse = trashImageClient;
-                }
 
-                log.LogTrace($"Image Copying: clientToUse={clientToUse.Name}");
-                using (var stream = await inputImageClient.OpenReadAsync())
+                var blobContainerClient = destionationStorageServiceClient.GetBlobContainerClient(containerNameToUse);
+
+                logger.LogTrace($"Image Copying: containerNameToUse={containerNameToUse}");
+                var destinationBlobClient = blobContainerClient.GetBlobClient(name);
+                using (var imageStream = await sourceImage.OpenReadAsync())
                 {
-                    await clientToUse.UploadFromStreamAsync(stream);
+                    await destinationBlobClient.UploadAsync(imageStream, true);
                 }
 
                 var @event = new EventGridEvent(
-                   subject: inputImageClient.Uri.ToString() ,
+                   subject: sourceImage.Uri.ToString(),
                    eventType: result.IsRecognized ? "imageRecognized" : "imageNotRecognized",
                    dataVersion: "1.0",
-                   data: (inputImageClient,result));
+                   data: (containerNameToUse, result));
 
-                await eventCollector.AddAsync(@event);
+                await eventClient.SendEventAsync(@event);
 
 
-                log.LogTrace($"Image Deleting: clientToUse={inputImageClient.Name}");
-                await inputImageClient.DeleteAsync();
+                logger.LogTrace($"Image Deleting: imageName={name}");
+                await sourceImage.DeleteAsync();
             }
             else
             {

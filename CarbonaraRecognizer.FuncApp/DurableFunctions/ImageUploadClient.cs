@@ -1,35 +1,37 @@
 //#define DURABLEFUNCTIONS
 
-using System;
-using System.IO;
-using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using CarbonaraRecognizer.FuncApp.DurableFunctions.Dtos;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.DurableTask;
+using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
 
 namespace CarbonaraRecognizer.FuncApp.DurableFunctions
 {
     public class ImageUploadClientcs
     {
+        private readonly ILogger<ImageUploadClientcs> logger;
+
+        public ImageUploadClientcs(ILogger<ImageUploadClientcs> logger)
+        {
+            this.logger = logger;
+        }
 
 #if DURABLEFUNCTIONS
-        [FunctionName("ImageUploadClientcs")]
+        [Function("ImageUploadClientcs")]
         public async Task Run(
-            [BlobTrigger("%SourceContainer%/{name}", Connection = "SourceStorageConnectionString")] ICloudBlob inputImageClient,
+            [BlobTrigger("%SourceContainer%/{name}", Connection = "SourceStorageConnectionString")] BlobClient inputImageClient,
             string name,
-            [DurableClient] IDurableClient client,
-            ILogger log)
+            [DurableClient] DurableTaskClient client)
         {
-            log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name}");
+            logger.LogInformation($"C# Blob trigger function Processed blob\n Name:{name}");
             var orchestratorDto = new ImageAnalyzerOrchestratorDto()
             {
                 BlobName = inputImageClient.Name
             };
 
-            await client.StartNewAsync("ImageAnalyzerOrchestrator", orchestratorDto);
+            await client.ScheduleNewOrchestrationInstanceAsync(new TaskName("ImageAnalyzerOrchestrator"), orchestratorDto);
         }
 #endif
 

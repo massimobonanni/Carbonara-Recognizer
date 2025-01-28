@@ -1,17 +1,12 @@
-﻿using CarbonaraRecognizer.Core.Entities;
+﻿using Azure.Storage.Blobs;
+using CarbonaraRecognizer.Core.Entities;
 using CarbonaraRecognizer.Core.Interfaces;
 using CarbonaraRecognizer.FuncApp.DurableFunctions.Dtos;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using CarbonaraRecognizer.FuncApp.Functions;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarbonaraRecognizer.FuncApp.DurableFunctions
 {
@@ -19,23 +14,27 @@ namespace CarbonaraRecognizer.FuncApp.DurableFunctions
     {
         private readonly IImageAnalyzer imageAnalyzer;
         private readonly IConfiguration configuration;
+        private readonly BlobServiceClient sourceStorageServiceClient;
+        private readonly ILogger<AnalyzeImageActivity> logger;
 
-        public AnalyzeImageActivity(IImageAnalyzer imageAnalyzer, IConfiguration configuration)
+        public AnalyzeImageActivity(IImageAnalyzer imageAnalyzer, IConfiguration configuration,
+            IAzureClientFactory<BlobServiceClient> blobClientFactory, ILogger<AnalyzeImageActivity> logger)
         {
             this.imageAnalyzer = imageAnalyzer;
             this.configuration = configuration;
+            this.sourceStorageServiceClient = blobClientFactory.CreateClient(Constants.SourceBlobClientName);
+            this.logger = logger;
         }
 
-        [FunctionName(nameof(AnalyzeImageActivity))]
+        [Function(nameof(AnalyzeImageActivity))]
         public  async Task<ImageAnalyzerResult> Run(
-            [ActivityTrigger] ImageAnalyzerOrchestratorDto orchestratorDto,
-            [Blob("%SourceContainer%", FileAccess.ReadWrite, Connection = "SourceStorageConnectionString")] CloudBlobContainer containerClient,
-            ILogger log)
+            [ActivityTrigger] ImageAnalyzerOrchestratorDto orchestratorDto)
         {
-            var blobReference = containerClient.GetBlockBlobReference(orchestratorDto.BlobName);
+            var containerClient = sourceStorageServiceClient.GetBlobContainerClient(configuration.GetValue<string>("SourceContainer"));
+            var blobClient = containerClient.GetBlobClient(orchestratorDto.BlobName);
 
             ImageAnalyzerResult result;
-            using (var stream = await blobReference.OpenReadAsync())
+            using (var stream = await blobClient.OpenReadAsync())
             {
                 result = await imageAnalyzer.AnalyzeImageAsync(stream);
             }
